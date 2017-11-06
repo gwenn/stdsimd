@@ -24,7 +24,7 @@ use simd_llvm::{simd_shuffle16, simd_shuffle32};
 
 use v256::*;
 use v128::*;
-use x86::__m256i;
+use x86::{__m128i, __m256i};
 
 #[cfg(test)]
 use stdsimd_test::assert_instr;
@@ -597,13 +597,78 @@ pub unsafe fn _mm256_cvtepi8_epi64(a: i8x16) -> i64x4 {
     simd_cast::<i8x4, _>(simd_shuffle4(a, a, [0, 1, 2, 3]))
 }
 
-// TODO _mm256_cvtepu16_epi32
-// TODO _mm256_cvtepu16_epi64
-// TODO _mm256_cvtepu32_epi64
-// TODO _mm256_cvtepu8_epi16
-// TODO _mm256_cvtepu8_epi32
-// TODO _mm256_cvtepu8_epi64
-// TODO _m128i _mm256_extracti128_si256
+/// Zero extend packed unsigned 16-bit integers in `a` to packed 32-bit
+/// integers, and return the results.
+#[inline(always)]
+#[target_feature = "+avx2"]
+#[cfg_attr(test, assert_instr(vpmovzxwd))]
+pub unsafe fn _mm256_cvtepu16_epi32(a: u16x8) -> i32x8 {
+    simd_cast(a)
+}
+
+/// Zero extend packed unsigned 16-bit integers in `a` to packed 64-bit
+/// integers, and return the results.
+#[inline(always)]
+#[target_feature = "+avx2"]
+#[cfg_attr(test, assert_instr(vpmovzxwq))]
+pub unsafe fn _mm256_cvtepu16_epi64(a: u16x8) -> i64x4 {
+    simd_cast::<::v64::u16x4, _>(simd_shuffle4(a, a, [0, 1, 2, 3]))
+}
+
+/// Zero extend packed unsigned 32-bit integers in `a` to packed 64-bit
+/// integers, and return the results.
+#[inline(always)]
+#[target_feature = "+avx2"]
+#[cfg_attr(test, assert_instr(vpmovzxdq))]
+pub unsafe fn _mm256_cvtepu32_epi64(a: u32x4) -> i64x4 {
+    simd_cast(a)
+}
+
+/// Zero extend packed unsigned 8-bit integers in `a` to packed 16-bit
+/// integers, and return the results.
+#[inline(always)]
+#[target_feature = "+avx2"]
+#[cfg_attr(test, assert_instr(vpmovzxbw))]
+pub unsafe fn _mm256_cvtepu8_epi16(a: u8x16) -> i16x16 {
+    simd_cast(a)
+}
+
+/// Zero extend packed unsigned 8-bit integers in `a` to packed 32-bit
+/// integers, and return the results.
+#[inline(always)]
+#[target_feature = "+avx2"]
+#[cfg_attr(test, assert_instr(vpmovzxbd))]
+pub unsafe fn _mm256_cvtepu8_epi32(a: u8x16) -> i32x8 {
+    simd_cast::<::v64::u8x8, _>(simd_shuffle8(a, a, [0, 1, 2, 3, 4, 5, 6, 7]))
+}
+
+#[repr(simd)]
+#[allow(non_camel_case_types)]
+struct u8x4(u8, u8, u8, u8);
+
+/// Zero extend packed unsigned 8-bit integers in the low 8 byte sof `a` to
+/// packed 64-bit integers, and return the results.
+#[inline(always)]
+#[target_feature = "+avx2"]
+#[cfg_attr(test, assert_instr(vpmovzxbq))]
+pub unsafe fn _mm256_cvtepu8_epi64(a: u8x16) -> i64x4 {
+    simd_cast::<u8x4, _>(simd_shuffle4(a, a, [0, 1, 2, 3]))
+}
+
+/// Extract 128 bits (composed of integer data) from `a`, selected with `imm8`,
+/// and return the result.
+#[inline(always)]
+#[target_feature = "+avx2"]
+#[cfg_attr(test, assert_instr(vextractf128))] // FIXME vextracti128 expected
+pub unsafe fn _mm256_extracti128_si256(a: __m256i, imm8: i32) -> __m128i {
+    use x86::avx::_mm256_undefined_si256;
+    let b = i64x4::from(_mm256_undefined_si256());
+    let dst: i64x2 = match imm8 & 1 {
+        0 => simd_shuffle2(i64x4::from(a), b, [0, 1]),
+        _ => simd_shuffle2(i64x4::from(a), b, [2, 3]),
+    };
+    __m128i::from(dst)
+}
 
 /// Horizontally add adjacent pairs of 16-bit integers in `a` and `b`.
 #[inline(always)]
