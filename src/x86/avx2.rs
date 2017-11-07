@@ -2243,7 +2243,7 @@ mod tests {
     use v256::*;
     use v128::*;
     use x86::avx2;
-    use x86::__m256i;
+    use x86::{__m128i, __m256i};
     use std;
 
     #[simd_test = "avx2"]
@@ -2801,6 +2801,60 @@ mod tests {
         let a = i32x4::new(0, 0, -1, 1);
         let r = i64x4::new(0, 0, -1, 1);
         assert_eq!(r, avx2::_mm256_cvtepi32_epi64(a));
+    }
+
+    #[simd_test = "avx2"]
+    unsafe fn _mm256_cvtepu16_epi32() {
+        let a = u16x8::new(0, 1, 2, 3, 4, 5, 6, 7);
+        let r = i32x8::new(0, 1, 2, 3, 4, 5, 6, 7);
+        assert_eq!(r, avx2::_mm256_cvtepu16_epi32(a));
+    }
+
+    #[simd_test = "avx2"]
+    unsafe fn _mm256_cvtepu16_epi64() {
+        let a = u16x8::new(0, 1, 2, 3, 4, 5, 6, 7);
+        let r = i64x4::new(0, 1, 2, 3);
+        assert_eq!(r, avx2::_mm256_cvtepu16_epi64(a));
+    }
+
+    #[simd_test = "avx2"]
+    unsafe fn _mm256_cvtepu32_epi64() {
+        let a = u32x4::new(0, 1, 2, 3);
+        let r = i64x4::new(0, 1, 2, 3);
+        assert_eq!(r, avx2::_mm256_cvtepu32_epi64(a));
+    }
+
+    #[simd_test = "avx2"]
+    unsafe fn _mm256_cvtepu8_epi16() {
+        let a =
+            u8x16::new(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+        let r =
+            i16x16::new(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+        assert_eq!(r, avx2::_mm256_cvtepu8_epi16(a));
+    }
+
+    #[simd_test = "avx2"]
+    unsafe fn _mm256_cvtepu8_epi32() {
+        let a =
+            u8x16::new(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+        let r = i32x8::new(0, 1, 2, 3, 4, 5, 6, 7);
+        assert_eq!(r, avx2::_mm256_cvtepu8_epi32(a));
+    }
+
+    #[simd_test = "avx2"]
+    unsafe fn _mm256_cvtepu8_epi64() {
+        let a =
+            u8x16::new(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+        let r = i64x4::new(0, 1, 2, 3);
+        assert_eq!(r, avx2::_mm256_cvtepu8_epi64(a));
+    }
+
+    #[simd_test = "avx2"]
+    unsafe fn _mm256_extracti128_si256() {
+        let a = i64x4::new(1, 2, 3, 4);
+        let r = avx2::_mm256_extracti128_si256(__m256i::from(a), 0);
+        let e = i64x2::new(1, 2);
+        assert_eq!(r, __m128i::from(e));
     }
 
     #[simd_test = "avx2"]
